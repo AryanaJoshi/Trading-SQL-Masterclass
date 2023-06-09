@@ -1,0 +1,23 @@
+Q.What is the earliest and latest date of transactions for all members?
+SELECT MAX(txn_date) ,MIN (txn_date)
+FROM trading.transactions
+
+Q.What is the range of market_date values available in the prices data?
+SELECT MIN(market_date) , MAX(market_date)
+FROM trading.prices
+
+Q.Which top 3 mentors have the most Bitcoin quantity as of the 29th of August?
+
+SELECT mem.member_id,mem.first_name
+,SUM(CASE WHEN trans.txn_type = 'BUY' Then trans.quantity
+WHEN trans.txn_type ='SELL' Then -trans.quantity END) "Quantity"
+
+FROM trading.members mem
+
+RIGHT JOIN trading.transactions trans
+ON mem.member_id = trans.member_id
+
+WHERE  trans.ticker ='BTC'
+GROUP BY mem.member_id,mem.first_name
+ORDER BY 3 DESC
+LIMIT 3
