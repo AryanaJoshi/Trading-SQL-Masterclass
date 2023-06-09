@@ -34,9 +34,7 @@ WITH cte_finalprice as (
   ,SUM 
   (CASE WHEN trans.txn_type ='BUY' THEN trans.quantity
    		WHEN trans.txn_type ='SELL' THEN -trans.quantity END) * fp.price "Total_ETH_Value"
-  ,AVG 
-  (CASE WHEN trans.txn_type ='BUY' THEN trans.quantity
-   		WHEN trans.txn_type ='SELL' THEN -trans.quantity END) * fp.price "Average_ETH_Value"
+      
   FROM trading.transactions trans
   
   INNER JOIN cte_finalprice fp
@@ -52,16 +50,20 @@ WITH cte_finalprice as (
   -------------------------------------
  Q. What is the average value of each Ethereum portfolio in each region? Sort this output in descending order.
  
- WITH cte_finalprice as (
+WITH cte_finalprice as (
   SELECT ticker,price "price"
   FROM trading.prices
   WHERE ticker ='ETH'
   AND market_date = '2021-08-29'
-  )
+  ),
+   
+ cte_calculation as (
    SELECT mem.region
-  ,AVG 
+  ,SUM 
   (CASE WHEN trans.txn_type ='BUY' THEN trans.quantity
    		WHEN trans.txn_type ='SELL' THEN -trans.quantity END) * fp.price "Total_ETH_Value"
+  ,COUNT(DISTINCT mem.member_id) "Mentor_Count"
+  FROM trading.transactions trans
   
   INNER JOIN cte_finalprice fp
   ON trans.ticker = fp.ticker
@@ -70,7 +72,10 @@ WITH cte_finalprice as (
   ON trans.member_id = mem.member_id
   
   WHERE trans.ticker = 'ETH'
-  
   GROUP BY mem.region,fp.price
-  ORDER BY 3 DESC
+  )
+  SELECT *
+  ,"Total_ETH_Value" / "Mentor_Count" as "Avg_ETH_Value"
+  FROM cte_calculation
+  ORDER BY "Avg_ETH_Value" DESC
  -------------------------------------------
