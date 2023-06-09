@@ -1,11 +1,11 @@
 Q.What is the earliest and latest date of transactions for all members?
 SELECT MAX(txn_date) ,MIN (txn_date)
 FROM trading.transactions
-
+------------------------------------
 Q.What is the range of market_date values available in the prices data?
 SELECT MIN(market_date) , MAX(market_date)
 FROM trading.prices
-
+-----------------------------------------
 Q.Which top 3 mentors have the most Bitcoin quantity as of the 29th of August?
 
 SELECT mem.member_id,mem.first_name
@@ -21,3 +21,32 @@ WHERE  trans.ticker ='BTC'
 GROUP BY mem.member_id,mem.first_name
 ORDER BY 3 DESC
 LIMIT 3
+------------------------------------------
+Q.What is total value of all Ethereum portfolios for each region at the end date? Order the output by descending portfolio value?
+
+WITH cte_finalprice as (
+  SELECT ticker,price "price"
+  FROM trading.prices
+  WHERE ticker ='ETH'
+  AND market_date = '2021-08-29'
+  )
+   SELECT mem.region
+  ,SUM 
+  (CASE WHEN trans.txn_type ='BUY' THEN trans.quantity
+   		WHEN trans.txn_type ='SELL' THEN -trans.quantity END) * fp.price "Total_ETH_Value"
+  ,AVG 
+  (CASE WHEN trans.txn_type ='BUY' THEN trans.quantity
+   		WHEN trans.txn_type ='SELL' THEN -trans.quantity END) * fp.price "Average_ETH_Value"
+  FROM trading.transactions trans
+  
+  INNER JOIN cte_finalprice fp
+  ON trans.ticker = fp.ticker
+  
+  INNER JOIN trading.members mem
+  ON trans.member_id = mem.member_id
+  
+  WHERE trans.ticker = 'ETH'
+  
+  GROUP BY mem.region,fp.price
+  ORDER BY 3 DESC
+  -------------------------------------
