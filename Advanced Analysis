@@ -1,0 +1,31 @@
+--Creating temp tables--
+--Create a base table that has each mentor's name, region and end of year total quantity for each ticker
+
+DROP TABLE IF EXISTS temp_table;
+CREATE TABLE  temp_table as
+WITH cte_joined_data as (
+  SELECT mem.first_name "first_name"
+ ,mem.region "region"
+ ,trans.ticker "ticker"
+ ,trans.txn_date "date" 
+  ,CASE WHEN trans.txn_type = 'BUY' THEN trans.quantity
+	  WHEN trans.txn_type = 'SELL' THEN -trans.quantity
+      END "total_quantity"
+FROM trading.members mem
+LEFT JOIN trading.transactions trans
+ON mem.member_id = trans.member_id
+WHERE trans.txn_date <='2020-12-31' 
+ )
+ 
+SELECT "first_name"
+,"region"
+,"ticker"
+,LEFT(CAST ("date" as char),4) "year"
+,SUM("total_quantity") "yearly_quantity"
+FROM  cte_joined_data
+GROUP BY "first_name"
+,"region"
+,"ticker"
+,"year"
+
+----------------------------------------------------------
